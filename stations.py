@@ -44,13 +44,3 @@ graph = {C_1: [(3.3, C_2)], C_2: [(3.3, C_1), (3.8, C_3), (4.1, C_9)],
          C_17: [(4.3, C_16), (2.7, C_18)], C_18: [(2.7, C_17)],
          C_19: [(4.4, C_12), (4.0, C_20)], C_20: [(4.0, C_19), (4.8, C_21)],
          C_21: [(4.8, C_20)]}
-
-# start = C_1
-# end = C_13
-# visited = dijkstra(C_1, C_21, graph)
-
-# cur_node = end
-# print(end)
-# while cur_node != start:
-#     cur_node = visited[cur_node]
-#     print(cur_node)

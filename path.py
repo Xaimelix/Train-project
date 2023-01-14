@@ -1,9 +1,5 @@
 import heapq
 
-graph = {'A': [(1, 'B')], 'B': [(3, 'C'), (2, 'E'), (1, 'A')], 'C': [(2, 'D'), (3, 'B')],
-         'D': [(2, 'E'), (2, 'C')], 'E': [(3, 'F'), (2, 'B')], 'F': [(3, 'E')]}
-
-
 def dijkstra(start, end, graph):
     queue = []
     heapq.heappush(queue, (0, start))
@@ -26,10 +22,3 @@ def dijkstra(start, end, graph):
 
     return visited
 
-
-# visited = dijkstra('A', 'F', graph)
-#
-# cur_n = 'F'
-# while cur_n != 'A':
-#     cur_n = visited[cur_n]
-#     print(cur_n)
