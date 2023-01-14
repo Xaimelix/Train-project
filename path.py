@@ -26,3 +26,10 @@ def dijkstra(start, end, graph):
 
     return visited
 
+
+# visited = dijkstra('A', 'F', graph)
+#
+# cur_n = 'F'
+# while cur_n != 'A':
+#     cur_n = visited[cur_n]
+#     print(cur_n)
