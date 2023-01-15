@@ -43,18 +43,21 @@ class Map(pygame.sprite.Sprite):
 
 def find_way_func(stations: list):
     full_way_indexes = []
-    start = stations_indexes[stations[0]]
-    end = stations_indexes[stations[1]]
-    visited = dijkstra(start, end, graph)
+    if stations:
+        start = stations_indexes[stations[0]]
+        end = stations_indexes[stations[1]]
+        visited = dijkstra(start, end, graph)
 
-    cur_node = end
-    if end not in full_way_indexes:
-        full_way_indexes.append(end)
-    while cur_node != start:
-        cur_node = visited[cur_node]
-        if cur_node not in full_way_indexes:
-            full_way_indexes.append(cur_node)
-    return full_way_indexes
+        cur_node = end
+        if end not in full_way_indexes:
+            full_way_indexes.append(end)
+        while cur_node != start:
+            cur_node = visited[cur_node]
+            if cur_node not in full_way_indexes:
+                full_way_indexes.append(cur_node)
+        return full_way_indexes
+    else:
+        return False
 
 
 # Station consts
@@ -82,29 +85,30 @@ class Station(pygame.sprite.Sprite):
             if self.rect.collidepoint(event.pos) and len(clicked_stations) < 2:
                 self.image = BUTTON_DOWN_IMG
                 self.pressed = 1
+            else:
+                self.image = BUTTON_UP_IMG
+                self.pressed = 0
         if self.is_station_way:
             self.image = BUTTON_WAY_STATION_IMG
-        else:
-            self.image = past_image
 
 
-class Button_clear(pygame.sprite.Sprite):
+class ButtonClear(pygame.sprite.Sprite):
     image = load_image('button_close.png')
 
     def __init__(self, pos):
         super().__init__(buttons)
-        self.image = Button_clear.image
+        self.image = ButtonClear.image
         self.x, self.y = pos
-        self.rect = pygame.Rect(pos, Button_clear.image.get_size())
+        self.rect = pygame.Rect(pos, ButtonClear.image.get_size())
         self.pos = pos
-        self.stat = False
+        self.pressed = False
 
     def update(self):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos) and len(clicked_stations) == 2:
-                self.stat = True
+                self.pressed = True
             else:
-                self.stat = False
+                self.pressed = False
 
 
 Map()
@@ -116,7 +120,7 @@ for index, i in zip(stations_indexes, stations_pos):
     # print(stations_indexes[index])
     Station(i, index)
 
-button_clear_way = Button_clear((100, 100))
+button_clear_way = ButtonClear((100, 100))
 
 # MAIN LOOP
 while running:
@@ -127,6 +131,7 @@ while running:
     stations.draw(screen)
     stations.update()
 
+
     for i in stations:
         if i.pressed:
             if len(clicked_stations) < 2 and i.index not in clicked_stations:
@@ -135,8 +140,11 @@ while running:
             for j in find_way_func(clicked_stations):
                 if j == stations_indexes[i.index]:
                     i.is_station_way = True
-        if button_clear_way.stat:
+        if button_clear_way.pressed:
             i.is_station_way = False
+            clicked_stations.clear()
+            find_way = False
+    button_clear_way.pressed = False
     if len(clicked_stations) == 2:
         find_way = True
         buttons.draw(screen)
