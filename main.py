@@ -1,9 +1,13 @@
+import random
 import sys
 import os
+from itertools import permutations
+
 import pygame, DB
-from stations import stations_indexes, graph
-from stations import dijkstra
+from stations import stations_indexes, graph, stations_pos
+from stations import dijkstra, get_key
 from button import Button
+from lines import lines_indexes
 
 # CONST
 pygame.init()
@@ -15,6 +19,7 @@ all_sprites = pygame.sprite.Group()
 stations = pygame.sprite.Group()
 map_group = pygame.sprite.Group()
 buttons = pygame.sprite.Group()
+lines = pygame.sprite.Group()
 clicked_stations = []
 find_way = False
 
@@ -92,6 +97,21 @@ class Station(pygame.sprite.Sprite):
             self.image = BUTTON_WAY_STATION_IMG
 
 
+class Line(pygame.sprite.Sprite):
+
+    def __init__(self, line_num):
+        super().__init__(lines)
+        if line_num < 20:
+            self.pre_image = load_image(f'line{line_num}.png')
+            self.num = line_num
+
+        else:
+            self.pre_image = load_image(f'line_transfer{line_num}.png')
+            self.num = line_num
+        self.image = pygame.transform.scale(self.pre_image, size)
+        self.rect = self.image.get_rect()
+
+
 class ButtonClear(pygame.sprite.Sprite):
     image = load_image('button_close.png')
 
@@ -113,14 +133,28 @@ class ButtonClear(pygame.sprite.Sprite):
 
 Map()
 pygame.display.flip()
-stations_pos = [(651, 477), (789, 496), (881, 452), (776, 453), (691, 423), (627, 423), (540, 433), (372, 532),
-                (897, 433), (796, 335), (765, 306), (686, 280), (593, 310), (541, 367), (553, 410), (860, 299),
-                (1018, 308), (1118, 302), (702, 216), (707, 138), (741, 56)]
 for index, i in zip(stations_indexes, stations_pos):
-    # print(stations_indexes[index])
     Station(i, index)
 
 button_clear_way = ButtonClear((100, 100))
+for_lines = []
+
+
+def search_lines(stations: list):
+    indexes = []
+    res_lines = []
+    for k, v in lines_indexes.items():
+        for st_str in stations:
+            if get_key(stations_indexes, st_str) not in indexes:
+                indexes.append(get_key(stations_indexes, st_str))
+        for i in permutations(indexes, 2):
+            if i == v:
+                if k not in res_lines:
+                    res_lines.append(k)
+    return res_lines
+
+
+lines_drawn = False
 
 # MAIN LOOP
 while running:
@@ -131,7 +165,6 @@ while running:
     stations.draw(screen)
     stations.update()
 
-
     for i in stations:
         if i.pressed:
             if len(clicked_stations) < 2 and i.index not in clicked_stations:
@@ -140,16 +173,24 @@ while running:
             for j in find_way_func(clicked_stations):
                 if j == stations_indexes[i.index]:
                     i.is_station_way = True
+            if not lines_drawn:
+                for line in search_lines(find_way_func(clicked_stations)):
+                    Line(line)
+                lines_drawn = True
         if button_clear_way.pressed:
             i.is_station_way = False
             clicked_stations.clear()
             find_way = False
+
+            lines_drawn = False
+            lines.empty()
     button_clear_way.pressed = False
     if len(clicked_stations) == 2:
         find_way = True
         buttons.draw(screen)
         buttons.update()
-
+    if lines_drawn:
+        lines.draw(screen)
     pygame.display.flip()
 pygame.quit()
 sys.exit()
