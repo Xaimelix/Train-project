@@ -100,6 +100,7 @@ class Station(pygame.sprite.Sprite):
 class Line(pygame.sprite.Sprite):
 
     def __init__(self, line_num):
+        # print(line_num)
         super().__init__(lines)
         if line_num < 20:
             self.pre_image = load_image(f'line{line_num}.png')
@@ -136,7 +137,7 @@ pygame.display.flip()
 for index, i in zip(stations_indexes, stations_pos):
     Station(i, index)
 
-button_clear_way = ButtonClear((100, 100))
+button_clear_way = ButtonClear((size[0]-100, 50))
 for_lines = []
 
 
@@ -148,6 +149,7 @@ def search_lines(stations: list):
             if get_key(stations_indexes, st_str) not in indexes:
                 indexes.append(get_key(stations_indexes, st_str))
         for i in permutations(indexes, 2):
+            print(i)
             if i == v:
                 if k not in res_lines:
                     res_lines.append(k)
