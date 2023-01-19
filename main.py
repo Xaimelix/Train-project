@@ -8,6 +8,7 @@ from stations import stations_indexes, graph, stations_pos
 from stations import dijkstra, get_key
 from button import Button
 from lines import lines_indexes
+from start_window import StartWindow
 
 # CONST
 pygame.init()
@@ -20,6 +21,7 @@ stations = pygame.sprite.Group()
 map_group = pygame.sprite.Group()
 buttons = pygame.sprite.Group()
 lines = pygame.sprite.Group()
+window = pygame.sprite.Group()
 clicked_stations = []
 find_way = False
 
@@ -113,6 +115,20 @@ class Line(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
+def search_lines(stations: list):
+    indexes = []
+    res_lines = []
+    for k, v in lines_indexes.items():
+        for st_str in stations:
+            if get_key(stations_indexes, st_str) not in indexes:
+                indexes.append(get_key(stations_indexes, st_str))
+        for i in permutations(indexes, 2):
+            if i == v:
+                if k not in res_lines:
+                    res_lines.append(k)
+    return res_lines
+
+
 class ButtonClear(pygame.sprite.Sprite):
     image = load_image('button_close.png')
 
@@ -132,67 +148,107 @@ class ButtonClear(pygame.sprite.Sprite):
                 self.pressed = False
 
 
+class ButtonStart(pygame.sprite.Sprite):
+    image = load_image('start_bu.png')
+
+    def __init__(self, pos):
+        super().__init__(window)
+        self.image = ButtonStart.image
+        self.x, self.y = pos
+        self.rect = pygame.Rect(pos, ButtonStart.image.get_size())
+        self.pos = pos
+        self.pressed = False
+
+    def update(self):
+        global status
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                status = 1
+
+
+def start_screen():
+    intro_text = ["ЗАСТАВКА", "",
+                  "Это не игра",
+                  "it's navigator (>.<)"]
+
+    fon = pygame.transform.scale(load_image('start.png'), (width, height))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 40)
+    text_coord = 50
+
+    window.draw(screen)
+    window.update()
+
+    for line in intro_text:
+        string_rendered = font.render(line, True, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+
+
+# start_screen()
 Map()
 pygame.display.flip()
 for index, i in zip(stations_indexes, stations_pos):
     Station(i, index)
 
-button_clear_way = ButtonClear((size[0]-100, 50))
+button_clear_way = ButtonClear((size[0] - 100, 50))
 for_lines = []
 
+St_w = StartWindow(size, all_sprites, window)
+St_b = ButtonStart((size[0] // 2 - 100, size[1] // 2 - 50))
 
-def search_lines(stations: list):
-    indexes = []
-    res_lines = []
-    for k, v in lines_indexes.items():
-        for st_str in stations:
-            if get_key(stations_indexes, st_str) not in indexes:
-                indexes.append(get_key(stations_indexes, st_str))
-        for i in permutations(indexes, 2):
-            print(i)
-            if i == v:
-                if k not in res_lines:
-                    res_lines.append(k)
-    return res_lines
+lines_created = False
 
-
-lines_drawn = False
+status = 0
 
 # MAIN LOOP
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    map_group.draw(screen)
-    stations.draw(screen)
-    stations.update()
+    if status == 0:
+        start_screen()
 
-    for i in stations:
-        if i.pressed:
-            if len(clicked_stations) < 2 and i.index not in clicked_stations:
-                clicked_stations.append(i.index)
-        if find_way:
-            for j in find_way_func(clicked_stations):
-                if j == stations_indexes[i.index]:
-                    i.is_station_way = True
-            if not lines_drawn:
-                for line in search_lines(find_way_func(clicked_stations)):
-                    Line(line)
-                lines_drawn = True
-        if button_clear_way.pressed:
-            i.is_station_way = False
-            clicked_stations.clear()
-            find_way = False
+        # buttons.draw(screen)
+        # buttons.update()
 
-            lines_drawn = False
-            lines.empty()
-    button_clear_way.pressed = False
-    if len(clicked_stations) == 2:
-        find_way = True
-        buttons.draw(screen)
-        buttons.update()
-    if lines_drawn:
-        lines.draw(screen)
+    elif status == 1:
+
+        map_group.draw(screen)
+        stations.draw(screen)
+        stations.update()
+
+        for i in stations:
+            if i.pressed:
+                if len(clicked_stations) < 2 and i.index not in clicked_stations:
+                    clicked_stations.append(i.index)
+            if find_way:
+                for j in find_way_func(clicked_stations):
+                    if j == stations_indexes[i.index]:
+                        i.is_station_way = True
+                if not lines_created:
+                    for line in search_lines(find_way_func(clicked_stations)):
+                        Line(line)
+                    lines_created = True
+            if button_clear_way.pressed:
+                i.is_station_way = False
+                clicked_stations.clear()
+                find_way = False
+
+                lines_created = False
+                lines.empty()
+        button_clear_way.pressed = False
+        if len(clicked_stations) == 2:
+            find_way = True
+            buttons.draw(screen)
+            buttons.update()
+        if lines_created:
+            lines.draw(screen)
     pygame.display.flip()
 pygame.quit()
 sys.exit()
