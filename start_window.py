@@ -18,7 +18,7 @@ def load_image(name, colorkey=None):
 
 
 class StartWindow(pygame.sprite.Sprite):
-    image = load_image('start.png')
+    image = load_image('train1.jpg')
 
     def __init__(self, size, *sprite_groups):
         super().__init__(*sprite_groups)

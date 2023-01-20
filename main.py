@@ -1,14 +1,13 @@
-import random
-import sys
 import os
+import sys
 from itertools import permutations
 
-import pygame, DB
-from stations import stations_indexes, graph, stations_pos
-from stations import dijkstra, get_key
-from button import Button
+import pygame
+
 from lines import lines_indexes
 from start_window import StartWindow
+from stations import dijkstra, get_key
+from stations import stations_indexes, graph, stations_pos
 
 # CONST
 pygame.init()
@@ -20,6 +19,7 @@ all_sprites = pygame.sprite.Group()
 stations = pygame.sprite.Group()
 map_group = pygame.sprite.Group()
 buttons = pygame.sprite.Group()
+tmp_lines = pygame.sprite.Group()
 lines = pygame.sprite.Group()
 window = pygame.sprite.Group()
 clicked_stations = []
@@ -115,6 +115,7 @@ class Line(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
+
 def search_lines(stations: list):
     indexes = []
     res_lines = []
@@ -180,17 +181,17 @@ def start_screen():
     window.update()
 
     for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('white'))
+        string_rendered = font.render(line, True, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
-        intro_rect.x = 10
+        intro_rect.x = 30
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
 
+counter = 0
 
-# start_screen()
 Map()
 pygame.display.flip()
 for index, i in zip(stations_indexes, stations_pos):
@@ -203,7 +204,6 @@ St_w = StartWindow(size, all_sprites, window)
 St_b = ButtonStart((size[0] // 2 - 100, size[1] // 2 - 50))
 
 lines_created = False
-
 status = 0
 
 # MAIN LOOP
@@ -234,6 +234,7 @@ while running:
                 if not lines_created:
                     for line in search_lines(find_way_func(clicked_stations)):
                         Line(line)
+                    counter = search_lines(find_way_func(clicked_stations))
                     lines_created = True
             if button_clear_way.pressed:
                 i.is_station_way = False
@@ -242,13 +243,23 @@ while running:
 
                 lines_created = False
                 lines.empty()
+                tmp_lines.empty()
         button_clear_way.pressed = False
         if len(clicked_stations) == 2:
             find_way = True
             buttons.draw(screen)
             buttons.update()
         if lines_created:
-            lines.draw(screen)
+            if 0 < len(counter) <= len(lines):
+                pygame.time.wait(500)
+                current = counter.pop(0)
+                for sprite in lines:
+                    if current == sprite.num:
+                        tmp_lines.add(sprite)
+                tmp_lines.draw(screen)
+            else:
+                lines.draw(screen)
+
     pygame.display.flip()
 pygame.quit()
 sys.exit()
