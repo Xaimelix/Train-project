@@ -46,3 +46,8 @@ def station_transfer_to_station(station: str):
     res = [i[0] for i in a][0]
     return res
 
+
+def get_info_station_by_index(index: int):
+    a = cur.execute(f"""select name, status, time from stations where id = '{index}' order by id""").fetchall()
+    res = [i for i in a][0]
+    return res
